@@ -41,7 +41,7 @@ It lives quietly in the system tray, with a one-click on/off toggle.
 > compare it with the SHA-256 for this release:
 >
 > ```
-> 9866AACAA546F9E931AC9B9298546585FE28E9A0AB135708E00484731CE4CAFF
+> 7896DC5DCB8A156FC1489BEB151669D491DBE43F2AFD96D1CEA6DAEE6516F84A
 > ```
 
 ## Command-line options
@@ -134,7 +134,23 @@ definition with `DDD_REMOVE_DEFINITION | DDD_EXACT_MATCH_ON_REMOVE`, leaving any
 pre-existing mapping untouched.
 
 Because the mapping is per-session, it is cleared on logout/reboot — use **Start with
-Windows** to restore it automatically.
+Windows** to restore it automatically. That toggle creates a plain shortcut in your
+Startup folder (`shell:startup\NullPrn.lnk`); it does **not** touch the registry, and
+you can remove it by hand at any time.
+
+## Antivirus note
+
+NullPrn is a small, open-source Python app compiled with Nuitka. Unsigned
+single-file executables that unpack themselves at startup can trigger
+**behavioural (heuristic) false positives** such as Kaspersky's
+`PDM:Trojan.Win32.Generic` — the binary is not malware, and the full source is in
+this repo so you can audit or build it yourself.
+
+If your antivirus flags it, you can:
+
+- Build it yourself from source (see below) and run that binary.
+- Verify the released `NullPrn.exe` against the SHA-256 in the release notes.
+- Add an exclusion for `NullPrn.exe`, or report it to your vendor as a false positive.
 
 ## Changelog
 

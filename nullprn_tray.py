@@ -15,7 +15,6 @@ import msvcrt
 import os
 import sys
 import tempfile
-import winreg
 from ctypes import wintypes
 
 import pystray
@@ -30,7 +29,6 @@ DDD_EXACT_MATCH_ON_REMOVE = 0x4
 
 NULL_DEVICE = r"\Device\Null"
 APP_NAME = "NullPrn"
-RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 
 # Single-instance guard: an OS-level lock on a file in %TEMP%. The lock is held
 # for the whole process lifetime and released automatically by the OS on exit
@@ -105,42 +103,95 @@ def deactivate_port(port, nt_target):
 
 
 # ---------------------------------------------------------------------------
-# Auto-start (HKEY_CURRENT_USER Run key)
+# Auto-start (shortcut in the user's Startup folder)
+#
+# We deliberately use a Startup-folder shortcut instead of the HKCU "Run"
+# registry key: writing to Run is a behaviour that antivirus heuristics flag
+# (it is the classic malware persistence trick), whereas dropping a .lnk in the
+# Startup folder is a plain, user-visible file the user can also remove by hand.
 # ---------------------------------------------------------------------------
-def _launch_command(ports, target):
-    """Rebuild the command line used to relaunch this app at login."""
+_ole32 = ctypes.oledll.ole32
+
+
+class _GUID(ctypes.Structure):
+    _fields_ = [("Data1", wintypes.DWORD), ("Data2", wintypes.WORD),
+                ("Data3", wintypes.WORD), ("Data4", wintypes.BYTE * 8)]
+
+    def __init__(self, s):
+        super().__init__()
+        _ole32.CLSIDFromString(s, ctypes.byref(self))
+
+
+_CLSID_ShellLink = _GUID("{00021401-0000-0000-C000-000000000046}")
+_IID_IShellLinkW = _GUID("{000214F9-0000-0000-C000-000000000046}")
+_IID_IPersistFile = _GUID("{0000010B-0000-0000-C000-000000000046}")
+_CLSCTX_INPROC_SERVER = 1
+
+
+def _com_method(ptr, index, *argtypes):
+    vtable = ctypes.cast(ptr, ctypes.POINTER(ctypes.c_void_p))[0]
+    fn_addr = ctypes.cast(vtable, ctypes.POINTER(ctypes.c_void_p))[index]
+    proto = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_void_p, *argtypes)
+    return proto(fn_addr)
+
+
+def startup_shortcut_path():
+    startup = os.path.join(os.environ["APPDATA"],
+                           r"Microsoft\Windows\Start Menu\Programs\Startup")
+    return os.path.join(startup, APP_NAME + ".lnk")
+
+
+def _launch_target(ports, target):
+    """Return (exe, arguments) to relaunch this app at login."""
     if getattr(sys, "frozen", False) or "__compiled__" in globals():
-        parts = [f'"{os.path.abspath(sys.argv[0])}"']
+        exe = os.path.abspath(sys.argv[0])
     else:
         pyw = os.path.join(os.path.dirname(sys.executable), "pythonw.exe")
         exe = pyw if os.path.exists(pyw) else sys.executable
-        parts = [f'"{exe}"', f'"{os.path.abspath(__file__)}"']
+    args = []
+    if not (getattr(sys, "frozen", False) or "__compiled__" in globals()):
+        args.append(f'"{os.path.abspath(__file__)}"')
     for p in ports:
-        parts += ["--port", p]
+        args += ["--port", p]
     if target is not None:
-        parts += ["--target", f'"{os.path.abspath(target)}"']
-    return " ".join(parts)
+        args += ["--target", f'"{os.path.abspath(target)}"']
+    return exe, " ".join(args)
+
+
+def _create_shortcut(lnk, exe, args, workdir, icon):
+    _ole32.CoInitialize(None)
+    psl = ctypes.c_void_p()
+    _ole32.CoCreateInstance(ctypes.byref(_CLSID_ShellLink), None,
+                            _CLSCTX_INPROC_SERVER, ctypes.byref(_IID_IShellLinkW),
+                            ctypes.byref(psl))
+    _com_method(psl, 20, wintypes.LPCWSTR)(psl, exe)                     # SetPath
+    _com_method(psl, 11, wintypes.LPCWSTR)(psl, args)                    # SetArguments
+    _com_method(psl, 9, wintypes.LPCWSTR)(psl, workdir)                  # SetWorkingDirectory
+    _com_method(psl, 17, wintypes.LPCWSTR, ctypes.c_int)(psl, icon, 0)   # SetIconLocation
+    ppf = ctypes.c_void_p()
+    _com_method(psl, 0, ctypes.POINTER(_GUID), ctypes.POINTER(ctypes.c_void_p))(
+        psl, ctypes.byref(_IID_IPersistFile), ctypes.byref(ppf))         # QueryInterface
+    _com_method(ppf, 6, wintypes.LPCWSTR, ctypes.c_int)(ppf, lnk, 1)     # Save
+    _com_method(ppf, 2)(ppf)   # Release IPersistFile
+    _com_method(psl, 2)(psl)   # Release IShellLink
 
 
 def autostart_enabled():
-    try:
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY) as key:
-            winreg.QueryValueEx(key, APP_NAME)
-            return True
-    except FileNotFoundError:
-        return False
+    return os.path.exists(startup_shortcut_path())
 
 
 def set_autostart(enabled, ports, target):
-    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, RUN_KEY) as key:
-        if enabled:
-            winreg.SetValueEx(key, APP_NAME, 0, winreg.REG_SZ,
-                              _launch_command(ports, target))
-        else:
-            try:
-                winreg.DeleteValue(key, APP_NAME)
-            except FileNotFoundError:
-                pass
+    lnk = startup_shortcut_path()
+    if enabled:
+        if os.path.exists(lnk):  # already created with our fixed name -> no-op
+            return
+        exe, args = _launch_target(ports, target)
+        _create_shortcut(lnk, exe, args, os.path.dirname(exe), exe)
+    else:
+        try:
+            os.remove(lnk)
+        except FileNotFoundError:
+            pass
 
 
 # ---------------------------------------------------------------------------
