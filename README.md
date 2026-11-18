@@ -1,5 +1,7 @@
 # NullPrn
 
+[![Latest release](https://img.shields.io/github/v/release/ManiacPC/nullprn?label=release)](https://github.com/ManiacPC/nullprn/releases/latest) · **v1.0.1**
+
 **Redirect a legacy parallel/USB printer port to the Windows null device — so old software that prints to `LPT1` stops failing on Windows 10/11.**
 
 Many legacy (DOS-era / ERP / POS / lab) applications print by writing raw bytes to a port such as `LPT1`. On modern Windows the classic trick:
