@@ -5,6 +5,13 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-11-18
+
+### Changed
+- The tray icon no longer toggles the redirection on left-click. Enabling or
+  disabling capture is now done only from the right-click context menu
+  ("Active" item), to avoid accidental toggles.
+
 ## [1.0.2] - 2026-11-18
 
 ### Changed
@@ -40,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `test_lpt1.py` helper to verify redirection.
 - README, MIT license, `requirements.txt`, and `build.bat`.
 
+[1.0.3]: https://github.com/ManiacPC/nullprn/releases/tag/v1.0.3
 [1.0.2]: https://github.com/ManiacPC/nullprn/releases/tag/v1.0.2
 [1.0.1]: https://github.com/ManiacPC/nullprn/releases/tag/v1.0.1
 [1.0.0]: https://github.com/ManiacPC/nullprn/releases/tag/v1.0.0

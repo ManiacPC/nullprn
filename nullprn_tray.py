@@ -271,7 +271,7 @@ class NullPrnApp:
             make_icon(True),
             menu=pystray.Menu(
                 pystray.MenuItem("Active", self.toggle,
-                                 checked=lambda i: self.is_active(), default=True),
+                                 checked=lambda i: self.is_active()),
                 pystray.MenuItem(self.mapping_text, None, enabled=False),
                 pystray.MenuItem("Start with Windows", self.toggle_autostart,
                                  checked=lambda i: autostart_enabled()),

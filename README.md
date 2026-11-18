@@ -12,7 +12,7 @@ NET USE LPT1: \\server\NUL
 
 often fails, because newer Windows releases added layers (redirector, session isolation, driver changes) on top of the old port mapping. NullPrn fixes this directly: it uses the Win32 `DefineDosDevice` API to point the port at `\Device\Null`, so **everything the program writes to the port "prints" successfully and is silently discarded** — no hangs, no error dialogs.
 
-It lives quietly in the system tray, with a one-click on/off toggle.
+It lives quietly in the system tray; toggle it on/off from the right-click menu.
 
 <p align="center"><img src="docs/tray-menu.png" width="320" alt="NullPrn tray menu: Active, LPT1 -> nul, Start with Windows, Quit"></p>
 
@@ -24,7 +24,7 @@ It lives quietly in the system tray, with a one-click on/off toggle.
 - ✅ **Multiple ports** at once: `--port LPT1 --port USB001`.
 - ✅ **Capture mode** — send what the program "prints" to a file instead of discarding it (`--target`), great for debugging what a legacy app is trying to output.
 - ✅ **Start with Windows** — optional auto-start toggle (the redirection is per-login and does not survive a reboot on its own).
-- ✅ Tiny tray app: green icon = active, grey = normal. One click toggles.
+- ✅ Tiny tray app: green icon = active, grey = normal. Toggle from the menu.
 - ✅ No installer needed — grab the prebuilt `NullPrn.exe` from [Releases](../../releases) and run it.
 - ✅ No admin rights required in the typical case.
 
@@ -32,8 +32,8 @@ It lives quietly in the system tray, with a one-click on/off toggle.
 
 **Just want to use it?** Download `NullPrn.exe` from the [Releases](../../releases) page and double-click it. An icon appears in the system tray.
 
-- **Left-click / right-click the tray icon** for the menu.
-- **Active** — toggle the redirection on/off.
+- **Right-click the tray icon** to open the menu.
+- **Active** — toggle the redirection on/off (from the menu).
 - **Start with Windows** — keep it running after every reboot.
 - **Quit** — removes the redirection and exits.
 
@@ -41,7 +41,7 @@ It lives quietly in the system tray, with a one-click on/off toggle.
 > compare it with the SHA-256 for this release:
 >
 > ```
-> 7896DC5DCB8A156FC1489BEB151669D491DBE43F2AFD96D1CEA6DAEE6516F84A
+> F27458F08F32C715237887F3358BFC1572DB124B1BCB7893AB39221C8EEC7D09
 > ```
 
 ## Command-line options
