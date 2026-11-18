@@ -136,6 +136,10 @@ pre-existing mapping untouched.
 Because the mapping is per-session, it is cleared on logout/reboot — use **Start with
 Windows** to restore it automatically.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the release history.
+
 ## License
 
 [MIT](LICENSE) — free to use, modify and distribute.
