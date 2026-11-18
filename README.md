@@ -39,7 +39,7 @@ It lives quietly in the system tray, with a one-click on/off toggle.
 > compare it with the SHA-256 for this release:
 >
 > ```
-> 30EFB803C5CE82791E7FB427C9AB16A81988E3C91CD57318E3B5C6393D9DFD62
+> 9866AACAA546F9E931AC9B9298546585FE28E9A0AB135708E00484731CE4CAFF
 > ```
 
 ## Command-line options

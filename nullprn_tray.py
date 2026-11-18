@@ -11,8 +11,10 @@ Run:           pythonw nullprn_tray.py
 """
 import argparse
 import ctypes
+import msvcrt
 import os
 import sys
+import tempfile
 import winreg
 from ctypes import wintypes
 
@@ -29,6 +31,28 @@ DDD_EXACT_MATCH_ON_REMOVE = 0x4
 NULL_DEVICE = r"\Device\Null"
 APP_NAME = "NullPrn"
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
+
+# Single-instance guard: an OS-level lock on a file in %TEMP%. The lock is held
+# for the whole process lifetime and released automatically by the OS on exit
+# (even on a crash or force-kill), so it never leaves a stale lock behind.
+_instance_lock = None
+LOCK_PATH = os.path.join(tempfile.gettempdir(), "nullprn.lock")
+
+
+def acquire_single_instance():
+    """Return True if we are the only instance, False if one is already running."""
+    global _instance_lock
+    try:
+        _instance_lock = open(LOCK_PATH, "a+")
+        _instance_lock.seek(0)
+        msvcrt.locking(_instance_lock.fileno(), msvcrt.LK_NBLCK, 1)
+        return True
+    except OSError:
+        if _instance_lock is not None:
+            _instance_lock.close()
+            _instance_lock = None
+        return False
+
 
 k32 = ctypes.WinDLL("kernel32", use_last_error=True)
 k32.DefineDosDeviceW.argtypes = [wintypes.DWORD, wintypes.LPCWSTR, wintypes.LPCWSTR]
@@ -224,6 +248,12 @@ def parse_args(argv=None):
 
 
 def main():
+    if not acquire_single_instance():
+        # MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND
+        ctypes.windll.user32.MessageBoxW(
+            0, "NullPrn is already running. Check the system tray icon.",
+            "NullPrn", 0x40 | 0x10000)
+        return
     ports, target = parse_args()
     NullPrnApp(ports, target).run()
 
