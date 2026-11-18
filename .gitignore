@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Nuitka build output
+*.build/
+*.dist/
+*.onefile-build/
+
+# Local binaries / artifacts (ship these via GitHub Releases instead)
+*.exe
+*.zip
+!NullPrn.ico
+
+# Capture files from --target
+*.prn
+
+# Build/tooling logs & reports
+build.log
+nuitka-crash-report.xml
+
+# Local tooling
+.claude/
+.headroom/
+
+# OS
+Thumbs.db
+Desktop.ini
