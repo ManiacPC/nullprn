@@ -12,7 +12,7 @@ often fails, because newer Windows releases added layers (redirector, session is
 
 It lives quietly in the system tray, with a one-click on/off toggle.
 
-<p align="center"><img src="NullPrn.ico" width="64" alt="NullPrn tray icon"></p>
+<p align="center"><img src="docs/tray-menu.png" width="320" alt="NullPrn tray menu: Active, LPT1 -> nul, Start with Windows, Quit"></p>
 
 ---
 
